@@ -2,7 +2,7 @@ import os
 import sys
 import scipy.io
 import numpy as np
-
+import sys
 from fair_clustering.dataset import ImageDataset
 
 
@@ -12,13 +12,14 @@ class MNISTUSPS(ImageDataset):
     dataset_name = "MNIST_USPS"
     dataset_dir = os.path.join(sys.path[1], "fair_clustering/raw_data/mnist_usps")
     file_url = "https://mega.nz/folder/oHJ2UCoK#r62nRoZ0gH8NXIcgmyWReA"
-
+    dataset_dir = "fair_clustering/raw_data/mnist_usps"
     def __init__(self, download=True, center=True):
         if not os.path.exists(os.path.join(self.dataset_dir, "MNIST_vs_USPS.mat")) and download:
+            print('dataset dir', self.dataset_dir)
             print(
                 "Automatic download is not available for this dataset, please download the data files from %s and put them under %s" % (
                     self.file_url, self.dataset_dir))
-            exit(1)
+            sys.exit(1)
 
         mat = scipy.io.loadmat(os.path.join(self.dataset_dir, "MNIST_vs_USPS.mat"))
         s = np.concatenate([np.zeros(mat["X_src"].shape[1]), np.ones(mat["X_tar"].shape[1])])
