@@ -11,6 +11,7 @@ class Office31(ImageDataset):
 
     dataset_name = "Office 31"
     dataset_dir = os.path.join(sys.path[1], "fair_clustering/raw_data/office31")
+    dataset_dir = "fair_clustering/raw_data/office31"
     file_url = {
         "domain_adaptation_features_20110616.tar.gz": "https://drive.google.com/u/0/uc?id=0B4IapRTv9pJ1WTVSd2FIcW4wRTA&export=download",
         "office31_resnet50.zip": "https://wjdcloud.blob.core.windows.net/dataset/office31_resnet50.zip",
