@@ -100,7 +100,7 @@ def train(model, CL, optimizer, s_idx0, s_idx1, bs, KL_div, tau, alpha, beta, id
     optimizer.step()
     return
 
-def ConsensusFairClusteringHelper(name, X_in, s_in, y_in, save, order=1, lr=0.01, weight_decay=5e-3, alpha=50.0, num_hidden=256, bs=3800, tau=2, epochs=3000, dropout=0.6):
+def ConsensusFairClusteringHelper(name, X_in, s_in, y_in,s, save, order=1, lr=0.01, weight_decay=5e-3, alpha=50.0, num_hidden=256, bs=3800, tau=2, epochs=3000, dropout=0.6):
   k = len(np.unique(y_in))
 
   if name == 'Office-31':
@@ -184,26 +184,24 @@ def ConsensusFairClusteringHelper(name, X_in, s_in, y_in, save, order=1, lr=0.01
 
   return pred_labels
 
-def ConsensusFairClustering(name, X_in, s_in, y_in, save):
+def ConsensusFairClustering(name, X_in, s_in, y_in, s, save):
   name_bal = {'Office-31': 0.5, 'MNIST_USPS': 0.3, 'DIGITS': 0.1, 'Yale': 0.1}
   while True: #Sometimes the model optimizes for a local minima which is why we can run enough times to get a good representation learnt
-    cfc_labels = ConsensusFairClusteringHelper(name, X_in, s_in, y_in, save)
+    cfc_labels = ConsensusFairClusteringHelper(name, X_in, s_in, y_in,s, save)
     if balance(cfc_labels, X_in, s_in) >= name_bal[name]: #threshold -> 0.5 for Office-31 and 0.3 (0.4) for MNIST_USPS and 0.1 for DIGITS and 0.1 for Yale
       break
   print("\nCompleted CFC model training.")
   return cfc_labels
 
-def trial_run(name, save= False):
-   X, y, s= get_dataset(name)
-   lbls = ConsensusFairClustering(name, X, s, y, save=False)
+def trial_run(name,X,s,y, save= False):
+   lbls = ConsensusFairClustering(name, X, s, y,s, save=False)
    print("balance: {}".format(balance(lbls, X, s)))
    print("entropy: {}".format(entropy(lbls, s)))
    print("nmi: {}".format(nmi(y, lbls)))
    print("acc: {}".format(acc(y, lbls)))
    return
 
-def attack_balance(solution,name,U_idx, V_idx):
-  X, y, s= get_dataset(name)
+def attack_balance(solution,name,U_idx, V_idx,X,s,y):
   X_copy, s_copy = X.copy(), s.copy()
   flipped_labels = solution.get_x()
   i = 0
@@ -211,7 +209,7 @@ def attack_balance(solution,name,U_idx, V_idx):
     s_copy[idx] = flipped_labels[i]
     i += 1
 
-  labels_sfd = ConsensusFairClustering(name, X_copy, s_copy, y, save=False)
+  labels_sfd = ConsensusFairClustering(name, X_copy, s_copy, y,s, save=False)
 
   s_eval = []
   X_eval = []
@@ -228,8 +226,8 @@ def attack_balance(solution,name,U_idx, V_idx):
 
   return bal
 
-def process_solution(sol,name,U_idx, V_idx):
-  X, y, s= get_dataset(name)
+def process_solution(sol,name,U_idx, V_idx,X,s,y):
+  
   X_copy, s_copy, y_copy = X.copy(), s.copy(), y.copy()
   flipped_labels = sol.get_x()
   i = 0
@@ -237,7 +235,7 @@ def process_solution(sol,name,U_idx, V_idx):
     s_copy[idx] = flipped_labels[i]
     i += 1
 
-  labels_sfd = ConsensusFairClustering(name, X_copy, s_copy, y, save=False)
+  labels_sfd = ConsensusFairClustering(name, X_copy, s_copy, y,s, save=False)
 
   s_eval = []
   X_eval = []
@@ -300,7 +298,7 @@ def main(name):
 
         for trial_idx in range(n_trials):
 
-            labels = ConsensusFairClustering(name, X, s, y, save=False)
+            labels = ConsensusFairClustering(name, X, s, y,s, save=False)
 
             s_test = []
             X_test = []
@@ -323,10 +321,10 @@ def main(name):
 
             dim_size = len(U_idx)
             dim = Dimension(dim_size, [[0, 1]]*dim_size, [False]*dim_size)
-            obj = Objective(attack_balance(solution,name,U_idx,V_idx), dim)
+            obj = Objective(attack_balance(solution,name,U_idx,V_idx,X,s,y), dim)
             solution = Opt.min(obj, Parameter(budget=5))
 
-            pa_bal, pa_ent, pa_acc, pa_nmi = process_solution(solution)
+            pa_bal, pa_ent, pa_acc, pa_nmi = process_solution(solution,name,U_idx,V_idx,X,s,y)
 
             cfc_post_res[percent]['BALANCE'].append(pa_bal)
             cfc_post_res[percent]['ENTROPY'].append(pa_ent)
