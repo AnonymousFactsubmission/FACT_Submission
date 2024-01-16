@@ -3,7 +3,7 @@ import sys
 import numpy as np
 import scipy.io
 
-from fair_clustering.dataset import ImageDataset
+from FairClusteringCodebase.fair_clustering.dataset import ImageDataset
 
 
 class Office31(ImageDataset):

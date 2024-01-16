@@ -3,7 +3,7 @@ import sys
 import scipy.io
 import numpy as np
 import sys
-from fair_clustering.dataset import ImageDataset
+from FairClusteringCodebase.fair_clustering.dataset import ImageDataset
 
 
 class MNISTUSPS(ImageDataset):

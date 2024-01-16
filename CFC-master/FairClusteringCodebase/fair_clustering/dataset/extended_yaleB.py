@@ -3,7 +3,7 @@ import sys
 import numpy as np
 from PIL import Image
 
-from fair_clustering.dataset import ImageDataset
+from FairClusteringCodebase.fair_clustering.dataset import ImageDataset
 
 
 class ExtendedYaleB(ImageDataset):

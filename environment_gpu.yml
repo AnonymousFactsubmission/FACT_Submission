@@ -16,8 +16,9 @@ dependencies:
     - gdown
     - python-mnist
     - pulp
-    - scikit-learn==0.22.2.post1
+    - scikit-learn
     - zoopt
     - pyckmeans
     - torch
+    - pandas
    

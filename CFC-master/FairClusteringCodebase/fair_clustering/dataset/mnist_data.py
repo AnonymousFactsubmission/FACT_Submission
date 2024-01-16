@@ -4,7 +4,7 @@ import numpy as np
 import scipy.io
 from mnist import MNIST
 
-from fair_clustering.dataset import ImageDataset
+from FairClusteringCodebase.fair_clustering.dataset import ImageDataset
 
 
 class MNISTData(ImageDataset):
