@@ -21,4 +21,4 @@ dependencies:
     - pyckmeans
     - torch
     - pandas
-   
+    - seaborn

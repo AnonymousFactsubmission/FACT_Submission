@@ -1,3 +1,5 @@
+from __future__ import division
+from __future__ import print_function
 import os
 import sys
 import numpy as np
@@ -21,7 +23,173 @@ from FairClusteringCodebase.fair_clustering.dataset import ExtendedYaleB, Office
 from FairClusteringCodebase.fair_clustering.algorithm import FairSpectral, FairKCenter, FairletDecomposition, ScalableFairletDecomposition
 
 import matplotlib.pyplot as plt
+#from pyckmeans import CKmeans
+import random
+import time
+import argparse
+import numpy as np
+import torch
+import torch.nn.functional as F
+import torch.optim as optim
+from tqdm import tqdm
 
-#os.environ['CUBLAS_WORKSPACE_CONFIG'] = ':16:8' #:4096:8
+from FairClusteringCodebase.ConsensusFairClustering.models import GMLP, ClusteringLayer
+from FairClusteringCodebase.ConsensusFairClustering.utils import get_A_r, sparse_mx_to_torch_sparse_tensor, target_distribution, aff
 
+from scipy import sparse
+from torch import nn
+
+os.environ['CUBLAS_WORKSPACE_CONFIG'] = ':16:8' #:4096:8
+
+def get_dataset(name):
+    if name == 'Office-31':
+        dataset = Office31(exclude_domain='amazon', use_feature=True)
+        X, y, s = dataset.data
+    elif name == 'MNIST_USPS':
+        dataset = MNISTUSPS(download=True)
+        X, y, s = dataset.data
+    elif name == 'Yale':
+        dataset = ExtendedYaleB(download=True, resize=True)
+        X, y, s = dataset.data
+    elif name == 'DIGITS':
+        X, y, s = np.load('X_' + name + '.npy'), np.load('y_' + name + '.npy'), np.load('s_' + name + '.npy')
+    
+    return X, y, s
+
+def Ncontrast(x_dis, adj_label, tau = 1):
+    """
+    compute the Ncontrast loss
+    """
+    x_dis = torch.exp( tau * x_dis)
+    x_dis_sum = torch.sum(x_dis, 1)
+    x_dis_sum_pos = torch.sum(x_dis*adj_label, 1)
+    loss = -torch.log(x_dis_sum_pos * (x_dis_sum**(-1))+1e-8).mean()
+    return loss
+
+def get_batch(batch_size, idx_train, adj_label, features):
+    """
+    get a batch of feature & adjacency matrix
+    """
+    rand_indx = torch.tensor(np.random.choice(np.arange(adj_label.shape[0]), batch_size)).type(torch.long).cuda()
+    rand_indx[0:len(idx_train)] = idx_train
+    features_batch = features[rand_indx]
+    adj_label_batch = adj_label[rand_indx,:][:,rand_indx]
+    return features_batch, adj_label_batch
+
+def train(model, CL, optimizer, s_idx0, s_idx1, bs, KL_div, tau, alpha, beta, idx_train, adj_label, features, Y, MSEL):
+    features_batch, adj_label_batch = get_batch(bs, idx_train, adj_label, features)
+    model.train()
+    CL.train()
+
+    optimizer.zero_grad()
+    output, x_dis, embeddings = model(features_batch)
+
+    output = CL(embeddings)
+    output0, output1 = output[s_idx0], output[s_idx1]
+    target0, target1 = target_distribution(output0).detach(), target_distribution(output1).detach()
+    fair_loss = 0.5 * KL_div(output0.log(), target0) + 0.5 * KL_div(output1.log(), target1)
+
+    loss_Ncontrast = Ncontrast(x_dis, adj_label_batch, tau = tau)
+
+    predict0, predict1 = Y[s_idx0], Y[s_idx1]
+    partition_loss = 0.5 * MSEL(aff(output0), aff(predict0)) + 0.5 * MSEL(aff(output1), aff(predict1))
+
+    loss_train = alpha * fair_loss + loss_Ncontrast + beta * partition_loss
+
+    loss_train.backward()
+    optimizer.step()
+    return
+
+def ConsensusFairClusteringHelper(name, X_in, s_in, y_in, save, order=1, lr=0.01, weight_decay=5e-3, alpha=50.0, num_hidden=256, bs=3800, tau=2, epochs=3000, dropout=0.6):
+  k = len(np.unique(y_in))
+
+  if name == 'Office-31':
+    beta = 100.0
+    alpha = 1.0
+    order = 1
+  if name == 'MNIST_USPS':
+    beta = 25.0
+    alpha = 100.0
+    order = 2
+  if name == 'Yale':
+    beta = 10.0
+    alpha = 50.0
+    order = 2
+  if name == 'DIGITS':
+    beta = 50.0
+    alpha = 10.0
+    order = 2
+    num_hidden=36
+
+
+  ckm = CKmeans(k=k, n_rep=100, p_samp=0.5, p_feat=0.5, random_state=42)
+  ckm.fit(X_in)
+  ckm_res = ckm.predict(X_in, return_cls=True)
+
+
+  adj, features, labels = ckm_res.cmatrix, X_in, y_in
+  adj = sparse.csr_matrix(adj)
+  adj = sparse_mx_to_torch_sparse_tensor(adj).float()
+  features = torch.FloatTensor(features).float()
+  labels = torch.LongTensor(labels)
+  idx_train = np.array(range(len(features)))
+  idx_train = torch.LongTensor(idx_train)
+
+  adj_label = get_A_r(adj, order)
+  adj, adj_label, features, idx_train = adj.cuda(), adj_label.cuda(), features.cuda(), idx_train.cuda()
+
+  s_idx0, s_idx1 = [], []
+  for i in range(len(s_in)):
+    if s_in[i] == 0:
+      s_idx0.append(i)
+    elif s_in[i] == 1:
+      s_idx1.append(i)
+
+
+  L = np.load('Consensus-Fair-Clustering/precomputed_labels/labels_' + name + '.npy')
+  Y = np.zeros((len(s), k))
+  for i,l in enumerate(L):
+    Y[i,l] = 1.0
+  Y = torch.FloatTensor(Y).float().cuda()
+  MSEL = nn.MSELoss(reduction="sum")
+
+  torch.manual_seed(42)
+  torch.use_deterministic_algorithms(True)
+  model = GMLP(nfeat=features.shape[1],
+              nhid=num_hidden,
+              nclass=labels.max().item() + 1,
+              dropout=dropout,
+              )
+
+  torch.manual_seed(42)
+  torch.use_deterministic_algorithms(True)
+  CL = ClusteringLayer(cluster_number=k, hidden_dimension=num_hidden).cuda()
+
+  optimizer = optim.Adam(model.get_parameters() + CL.get_parameters(), lr=lr, weight_decay=weight_decay)
+  KL_div = nn.KLDivLoss(reduction="sum")
+  model.cuda()
+  features = features.cuda()
+  labels = labels.cuda()
+  idx_train = idx_train.cuda()
+
+  for epoch in tqdm(range(epochs)):
+    train(model, CL, optimizer, s_idx0, s_idx1, bs, KL_div, tau, alpha, beta, idx_train, adj_label, features, Y, MSEL)
+
+  model.eval()
+  logits, embeddings = model(features)
+  CL.eval()
+  preds = CL(embeddings)
+  preds = preds.cpu().detach().numpy()
+  pred_labels = np.argmax(preds, axis=1)
+
+  return pred_labels
+
+def ConsensusFairClustering(name, X_in, s_in, y_in, save):
+  name_bal = {'Office-31': 0.5, 'MNIST_USPS': 0.3, 'DIGITS': 0.1, 'Yale': 0.1}
+  while True: #Sometimes the model optimizes for a local minima which is why we can run enough times to get a good representation learnt
+    cfc_labels = ConsensusFairClusteringHelper(name, X_in, s_in, y_in, save)
+    if balance(cfc_labels, X_in, s_in) >= name_bal[name]: #threshold -> 0.5 for Office-31 and 0.3 (0.4) for MNIST_USPS and 0.1 for DIGITS and 0.1 for Yale
+      break
+  print("\nCompleted CFC model training.")
+  return cfc_labels
 
