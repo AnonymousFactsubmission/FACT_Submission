@@ -23,7 +23,7 @@ from FairClusteringCodebase.fair_clustering.dataset import ExtendedYaleB, Office
 from FairClusteringCodebase.fair_clustering.algorithm import FairSpectral, FairKCenter, FairletDecomposition, ScalableFairletDecomposition
 
 import matplotlib.pyplot as plt
-#from pyckmeans import CKmeans
+from pyckmeans import CKmeans
 import random
 import time
 import argparse
@@ -52,7 +52,7 @@ def get_dataset(name):
         dataset = ExtendedYaleB(download=True, resize=True)
         X, y, s = dataset.data
     elif name == 'DIGITS':
-        X, y, s = np.load('X_' + name + '.npy'), np.load('y_' + name + '.npy'), np.load('s_' + name + '.npy')
+        X, y, s = np.load('CFC-master/FairClusteringCodebase/X_' + name + '.npy'), np.load('CFC-master/FairClusteringCodebase/y_' + name + '.npy'), np.load('CFC-master/FairClusteringCodebase/s_' + name + '.npy')
     
     return X, y, s
 
@@ -146,7 +146,7 @@ def ConsensusFairClusteringHelper(name, X_in, s_in, y_in, save, order=1, lr=0.01
       s_idx1.append(i)
 
 
-  L = np.load('Consensus-Fair-Clustering/precomputed_labels/labels_' + name + '.npy')
+  L = np.load('CFC-master/ConsensusFairClustering/precomputed_labels/labels_' + name + '.npy')
   Y = np.zeros((len(s), k))
   for i,l in enumerate(L):
     Y[i,l] = 1.0
@@ -193,3 +193,160 @@ def ConsensusFairClustering(name, X_in, s_in, y_in, save):
   print("\nCompleted CFC model training.")
   return cfc_labels
 
+def trial_run(name, save= False):
+   X, y, s= get_dataset(name)
+   lbls = ConsensusFairClustering(name, X, s, y, save=False)
+   print("balance: {}".format(balance(lbls, X, s)))
+   print("entropy: {}".format(entropy(lbls, s)))
+   print("nmi: {}".format(nmi(y, lbls)))
+   print("acc: {}".format(acc(y, lbls)))
+   return
+
+def attack_balance(solution,name,U_idx, V_idx):
+  X, y, s= get_dataset(name)
+  X_copy, s_copy = X.copy(), s.copy()
+  flipped_labels = solution.get_x()
+  i = 0
+  for idx in U_idx:
+    s_copy[idx] = flipped_labels[i]
+    i += 1
+
+  labels_sfd = ConsensusFairClustering(name, X_copy, s_copy, y, save=False)
+
+  s_eval = []
+  X_eval = []
+  labels_sfd_eval = []
+  for idx in V_idx:
+    s_eval.append(s_copy[idx])
+    X_eval.append(X_copy[idx])
+    labels_sfd_eval.append(labels_sfd[idx])
+  s_eval = np.array(s_eval)
+  X_eval = np.array(X_eval)
+  labels_sfd_eval = np.array(labels_sfd_eval)
+
+  bal = balance(labels_sfd_eval, X_eval, s_eval)
+
+  return bal
+
+def process_solution(sol,name,U_idx, V_idx):
+  X, y, s= get_dataset(name)
+  X_copy, s_copy, y_copy = X.copy(), s.copy(), y.copy()
+  flipped_labels = sol.get_x()
+  i = 0
+  for idx in U_idx:
+    s_copy[idx] = flipped_labels[i]
+    i += 1
+
+  labels_sfd = ConsensusFairClustering(name, X_copy, s_copy, y, save=False)
+
+  s_eval = []
+  X_eval = []
+  labels_sfd_eval = []
+  y_eval = []
+  for idx in V_idx:
+    s_eval.append(s_copy[idx])
+    X_eval.append(X_copy[idx])
+    labels_sfd_eval.append(labels_sfd[idx])
+    y_eval.append(y_copy[idx])
+  s_eval = np.array(s_eval)
+  X_eval = np.array(X_eval)
+  labels_sfd_eval = np.array(labels_sfd_eval)
+  y_eval = np.array(y_eval)
+
+  bal = balance(labels_sfd_eval, X_eval, s_eval)
+  ent = entropy(labels_sfd_eval, s_eval)
+  accuracy = acc(y_eval, labels_sfd_eval)
+  nmi_score = nmi(y_eval, labels_sfd_eval)
+
+  return (bal, ent, accuracy, nmi_score)
+
+def main(name):
+   # @title Testo del titolo predefinito
+    X, y, s= get_dataset(name)
+    n_clusters = len(np.unique(y))
+    print("# of clusters -> " + str(n_clusters))
+    n_trials = 1
+
+    U_idx_full, V_idx_full = np.load('CFC-master/FairClusteringCodebase/U_idx_' + name + '.npy').tolist(), np.load('CFC-master/FairClusteringCodebase/V_idx_' + name + '.npy').tolist()
+
+    cfc_pre_res = {
+        0 : {'BALANCE': [], 'ENTROPY': [], 'ACC': [], 'NMI': []},
+        1 : {'BALANCE': [], 'ENTROPY': [], 'ACC': [], 'NMI': []},
+        2 : {'BALANCE': [], 'ENTROPY': [], 'ACC': [], 'NMI': []},
+        3 : {'BALANCE': [], 'ENTROPY': [], 'ACC': [], 'NMI': []},
+        4 : {'BALANCE': [], 'ENTROPY': [], 'ACC': [], 'NMI': []},
+        5 : {'BALANCE': [], 'ENTROPY': [], 'ACC': [], 'NMI': []},
+        6 : {'BALANCE': [], 'ENTROPY': [], 'ACC': [], 'NMI': []},
+        7 : {'BALANCE': [], 'ENTROPY': [], 'ACC': [], 'NMI': []},
+    }
+
+
+    cfc_post_res = {
+        0 : {'BALANCE': [], 'ENTROPY': [], 'ACC': [], 'NMI': []},
+        1 : {'BALANCE': [], 'ENTROPY': [], 'ACC': [], 'NMI': []},
+        2 : {'BALANCE': [], 'ENTROPY': [], 'ACC': [], 'NMI': []},
+        3 : {'BALANCE': [], 'ENTROPY': [], 'ACC': [], 'NMI': []},
+        4 : {'BALANCE': [], 'ENTROPY': [], 'ACC': [], 'NMI': []},
+        5 : {'BALANCE': [], 'ENTROPY': [], 'ACC': [], 'NMI': []},
+        6 : {'BALANCE': [], 'ENTROPY': [], 'ACC': [], 'NMI': []},
+        7 : {'BALANCE': [], 'ENTROPY': [], 'ACC': [], 'NMI': []},
+    }
+
+
+    for percent, j in enumerate([int(0.125*len(U_idx_full)), int(0.25*len(U_idx_full)), int(0.375*len(U_idx_full)), int(0.5*len(U_idx_full)), int(0.625*len(U_idx_full)), int(0.75*len(U_idx_full)), int(0.875*len(U_idx_full)), int(len(U_idx_full))]):
+        print('percent', percent)
+        U_idx = U_idx_full[:j]
+        V_idx = V_idx_full
+
+        for trial_idx in range(n_trials):
+
+            labels = ConsensusFairClustering(name, X, s, y, save=False)
+
+            s_test = []
+            X_test = []
+            labels_test = []
+            y_test = []
+            for idx in V_idx:
+                s_test.append(s[idx])
+                X_test.append(X[idx])
+                labels_test.append(labels[idx])
+                y_test.append(y[idx])
+            s_test = np.array(s_test)
+            X_test = np.array(X_test)
+            labels_test = np.array(labels_test)
+            y_test = np.array(y_test)
+
+            cfc_pre_res[percent]['BALANCE'].append(balance(labels_test, X_test, s_test))
+            cfc_pre_res[percent]['ENTROPY'].append(entropy(labels_test, s_test))
+            cfc_pre_res[percent]['ACC'].append(acc(y_test, labels_test))
+            cfc_pre_res[percent]['NMI'].append(nmi(y_test, labels_test))
+
+            dim_size = len(U_idx)
+            dim = Dimension(dim_size, [[0, 1]]*dim_size, [False]*dim_size)
+            obj = Objective(attack_balance(solution,name,U_idx,V_idx), dim)
+            solution = Opt.min(obj, Parameter(budget=5))
+
+            pa_bal, pa_ent, pa_acc, pa_nmi = process_solution(solution)
+
+            cfc_post_res[percent]['BALANCE'].append(pa_bal)
+            cfc_post_res[percent]['ENTROPY'].append(pa_ent)
+            cfc_post_res[percent]['ACC'].append(pa_acc)
+            cfc_post_res[percent]['NMI'].append(pa_nmi)
+
+    for percent, j in enumerate([int(0.125*len(U_idx_full)), int(0.25*len(U_idx_full)), int(0.375*len(U_idx_full)), int(0.5*len(U_idx_full)), int(0.625*len(U_idx_full)), int(0.75*len(U_idx_full)), int(0.875*len(U_idx_full)), int(len(U_idx_full))]):
+        print('percent', percent) 
+        print("balance: {}".format(cfc_post_res[percent]['BALANCE']))
+        print("entropy: {}".format(cfc_post_res[percent]['ENTROPY']))
+        print("nmi: {}".format(cfc_post_res[percent]['ACC']))
+        print("acc: {}".format(cfc_post_res[percent]['NMI']))
+    return cfc_post_res
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser()
+
+    parser.add_argument('--name', default='DIGITS', type=str,
+                        help='Name of the dataset to use')
+
+    args = parser.parse_args()
+    kwargs = vars(args)
+    main(**kwargs)
