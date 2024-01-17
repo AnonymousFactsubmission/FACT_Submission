@@ -12,5 +12,5 @@ module purge
 module load 2022
 module load Anaconda3/2023.05
 
-cd $HOME/DocumentsFACT2023/
+cd $HOME/Documents/FACT2023/
 conda env create -f environment_gpu.yml
