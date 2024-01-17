@@ -100,7 +100,7 @@ def train(model, CL, optimizer, s_idx0, s_idx1, bs, KL_div, tau, alpha, beta, id
     optimizer.step()
     return
 
-def ConsensusFairClusteringHelper(name, X_in, s_in, y_in,s, save, order=1, lr=0.01, weight_decay=5e-3, alpha=50.0, num_hidden=256, bs=3800, tau=2, epochs=3000, dropout=0.6):
+def ConsensusFairClusteringHelper(name, seed, X_in, s_in, y_in,s, save, order=1, lr=0.01, weight_decay=5e-3, alpha=50.0, num_hidden=256, bs=3800, tau=2, epochs=3000, dropout=0.6):
   k = len(np.unique(y_in))
 
   if name == 'Office-31':
@@ -122,7 +122,7 @@ def ConsensusFairClusteringHelper(name, X_in, s_in, y_in,s, save, order=1, lr=0.
     num_hidden=36
 
 
-  ckm = CKmeans(k=k, n_rep=100, p_samp=0.5, p_feat=0.5, random_state=42)
+  ckm = CKmeans(k=k, n_rep=100, p_samp=0.5, p_feat=0.5, random_state=seed)
   ckm.fit(X_in)
   ckm_res = ckm.predict(X_in, return_cls=True)
 
@@ -153,7 +153,7 @@ def ConsensusFairClusteringHelper(name, X_in, s_in, y_in,s, save, order=1, lr=0.
   Y = torch.FloatTensor(Y).float().cuda()
   MSEL = nn.MSELoss(reduction="sum")
 
-  torch.manual_seed(42)
+  torch.manual_seed(seed)
   torch.use_deterministic_algorithms(True)
   model = GMLP(nfeat=features.shape[1],
               nhid=num_hidden,
@@ -161,7 +161,7 @@ def ConsensusFairClusteringHelper(name, X_in, s_in, y_in,s, save, order=1, lr=0.
               dropout=dropout,
               )
 
-  torch.manual_seed(42)
+  torch.manual_seed(seed)
   torch.use_deterministic_algorithms(True)
   CL = ClusteringLayer(cluster_number=k, hidden_dimension=num_hidden).cuda()
 
@@ -184,24 +184,24 @@ def ConsensusFairClusteringHelper(name, X_in, s_in, y_in,s, save, order=1, lr=0.
 
   return pred_labels
 
-def ConsensusFairClustering(name, X_in, s_in, y_in, s, save):
+def ConsensusFairClustering(name, seed, X_in, s_in, y_in, s, save):
   name_bal = {'Office-31': 0.5, 'MNIST_USPS': 0.3, 'DIGITS': 0.1, 'Yale': 0.1}
   while True: #Sometimes the model optimizes for a local minima which is why we can run enough times to get a good representation learnt
-    cfc_labels = ConsensusFairClusteringHelper(name, X_in, s_in, y_in,s, save)
+    cfc_labels = ConsensusFairClusteringHelper(name, seed, X_in, s_in, y_in,s, save)
     if balance(cfc_labels, X_in, s_in) >= name_bal[name]: #threshold -> 0.5 for Office-31 and 0.3 (0.4) for MNIST_USPS and 0.1 for DIGITS and 0.1 for Yale
       break
   print("\nCompleted CFC model training.")
   return cfc_labels
 
-def trial_run(name,X,s,y, save= False):
-   lbls = ConsensusFairClustering(name, X, s, y,s, save=False)
+def trial_run(name, seed, X,s,y, save= False):
+   lbls = ConsensusFairClustering(name, seed, X, s, y,s, save=False)
    print("balance: {}".format(balance(lbls, X, s)))
    print("entropy: {}".format(entropy(lbls, s)))
    print("nmi: {}".format(nmi(y, lbls)))
    print("acc: {}".format(acc(y, lbls)))
    return
 
-def attack_balance(solution,name,U_idx, V_idx,X,s,y):
+def attack_balance(solution,name, seed, U_idx, V_idx,X,s,y):
   X_copy, s_copy = X.copy(), s.copy()
   flipped_labels = solution.get_x()
   i = 0
@@ -209,7 +209,7 @@ def attack_balance(solution,name,U_idx, V_idx,X,s,y):
     s_copy[idx] = flipped_labels[i]
     i += 1
 
-  labels_sfd = ConsensusFairClustering(name, X_copy, s_copy, y,s, save=False)
+  labels_sfd = ConsensusFairClustering(name, seed, X_copy, s_copy, y,s, save=False)
 
   s_eval = []
   X_eval = []
@@ -226,7 +226,7 @@ def attack_balance(solution,name,U_idx, V_idx,X,s,y):
 
   return bal
 
-def process_solution(sol,name,U_idx, V_idx,X,s,y):
+def process_solution(sol,name, seed, U_idx, V_idx,X,s,y):
   
   X_copy, s_copy, y_copy = X.copy(), s.copy(), y.copy()
   flipped_labels = sol.get_x()
@@ -235,7 +235,7 @@ def process_solution(sol,name,U_idx, V_idx,X,s,y):
     s_copy[idx] = flipped_labels[i]
     i += 1
 
-  labels_sfd = ConsensusFairClustering(name, X_copy, s_copy, y,s, save=False)
+  labels_sfd = ConsensusFairClustering(name, seed, X_copy, s_copy, y,s, save=False)
 
   s_eval = []
   X_eval = []
@@ -258,7 +258,7 @@ def process_solution(sol,name,U_idx, V_idx,X,s,y):
 
   return (bal, ent, accuracy, nmi_score)
 
-def main(name):
+def main(name, seed):
    # @title Testo del titolo predefinito
     X, y, s= get_dataset(name)
     n_clusters = len(np.unique(y))
@@ -298,7 +298,7 @@ def main(name):
 
         for trial_idx in range(n_trials):
 
-            labels = ConsensusFairClustering(name, X, s, y,s, save=False)
+            labels = ConsensusFairClustering(name, seed, X, s, y,s, save=False)
 
             s_test = []
             X_test = []
@@ -321,10 +321,10 @@ def main(name):
 
             dim_size = len(U_idx)
             dim = Dimension(dim_size, [[0, 1]]*dim_size, [False]*dim_size)
-            obj = Objective(attack_balance(solution,name,U_idx,V_idx,X,s,y), dim)
+            obj = Objective(attack_balance(solution,name, seed, U_idx,V_idx,X,s,y), dim)
             solution = Opt.min(obj, Parameter(budget=5))
 
-            pa_bal, pa_ent, pa_acc, pa_nmi = process_solution(solution,name,U_idx,V_idx,X,s,y)
+            pa_bal, pa_ent, pa_acc, pa_nmi = process_solution(solution,name, seed, U_idx,V_idx,X,s,y)
 
             cfc_post_res[percent]['BALANCE'].append(pa_bal)
             cfc_post_res[percent]['ENTROPY'].append(pa_ent)
@@ -344,7 +344,8 @@ if __name__ == '__main__':
 
     parser.add_argument('--name', default='DIGITS', type=str,
                         help='Name of the dataset to use')
-
+    parser.add_argument('--seed', default=42, type=int,
+                        help='Seed for randomization') 
     args = parser.parse_args()
     kwargs = vars(args)
     main(**kwargs)
