@@ -5,14 +5,14 @@
 #SBATCH --job-name=RunPythonScript
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=16
-#SBATCH --time=00:45:00
-#SBATCH --output=outputs/slurm_output_%A.out
+#SBATCH --time=02:00:00
+#SBATCH --output=outputs/DIGITS_ds_run.out
 
 
 module purge
-module load 2023
-module load Anaconda3/2023.05
+module load 2022
+module load Anaconda3/2022.05
 
 
 source activate fact2023
-srun python $HOME/CFC-master/Defense_snellius.py --name DIGITS
+srun python $HOME/CFC-master/Defense_snellius.py --name DIGITS --seed 42
