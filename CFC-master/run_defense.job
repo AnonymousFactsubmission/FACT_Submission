@@ -8,11 +8,9 @@
 #SBATCH --time=02:00:00
 #SBATCH --output=outputs/DIGITS_ds_run.out
 
-
 module purge
 module load 2022
 module load Anaconda3/2022.05
-
 
 source activate fact2023
 srun python $HOME/CFC-master/Defense_snellius.py --name DIGITS --seed 42
