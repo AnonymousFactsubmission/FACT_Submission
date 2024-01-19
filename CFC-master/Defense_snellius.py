@@ -52,7 +52,7 @@ def get_dataset(name):
         dataset = ExtendedYaleB(download=True, resize=True)
         X, y, s = dataset.data
     elif name == 'DIGITS':
-        X, y, s = np.load('CFC-master/FairClusteringCodebase/X_' + name + '.npy'), np.load('CFC-master/FairClusteringCodebase/y_' + name + '.npy'), np.load('CFC-master/FairClusteringCodebase/s_' + name + '.npy')
+        X, y, s = np.load('FairClusteringCodebase/X_' + name + '.npy'), np.load('FairClusteringCodebase/y_' + name + '.npy'), np.load('FairClusteringCodebase/s_' + name + '.npy')
     
     return X, y, s
 
@@ -146,7 +146,7 @@ def ConsensusFairClusteringHelper(name, seed, X_in, s_in, y_in,s, save, order=1,
       s_idx1.append(i)
 
 
-  L = np.load('CFC-master/ConsensusFairClustering/precomputed_labels/labels_' + name + '.npy')
+  L = np.load('ConsensusFairClustering/precomputed_labels/labels_' + name + '.npy')
   Y = np.zeros((len(s), k))
   for i,l in enumerate(L):
     Y[i,l] = 1.0
@@ -265,7 +265,7 @@ def main(name, seed):
     print("# of clusters -> " + str(n_clusters))
     n_trials = 1
 
-    U_idx_full, V_idx_full = np.load('CFC-master/FairClusteringCodebase/U_idx_' + name + '.npy').tolist(), np.load('CFC-master/FairClusteringCodebase/V_idx_' + name + '.npy').tolist()
+    U_idx_full, V_idx_full = np.load('FairClusteringCodebase/U_idx_' + name + '.npy').tolist(), np.load('FairClusteringCodebase/V_idx_' + name + '.npy').tolist()
 
     cfc_pre_res = {
         0 : {'BALANCE': [], 'ENTROPY': [], 'ACC': [], 'NMI': []},
