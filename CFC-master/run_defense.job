@@ -6,7 +6,7 @@
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=16
 #SBATCH --time=02:00:00
-#SBATCH --output=outputs/DIGITS_ds_run.out
+#SBATCH --output=outputs/DIGITS_ds_run_%A.out
 
 module purge
 module load 2022
