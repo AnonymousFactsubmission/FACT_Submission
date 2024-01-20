@@ -146,7 +146,7 @@ def ConsensusFairClusteringHelper(name, seed, X_in, s_in, y_in,s, save, order=1,
       s_idx1.append(i)
 
 
-  L = np.load('ConsensusFairClustering/precomputed_labels/labels_' + name + '.npy')
+  L = np.load('FairClusteringCodebase/ConsensusFairClustering/precomputed_labels/labels_' + name + '.npy')
   Y = np.zeros((len(s), k))
   for i,l in enumerate(L):
     Y[i,l] = 1.0
@@ -321,7 +321,7 @@ def main(name, seed):
 
             dim_size = len(U_idx)
             dim = Dimension(dim_size, [[0, 1]]*dim_size, [False]*dim_size)
-            obj = Objective(attack_balance(solution,name, seed, U_idx,V_idx,X,s,y), dim)
+            obj = Objective(attack_balance, dim)
             solution = Opt.min(obj, Parameter(budget=5))
 
             pa_bal, pa_ent, pa_acc, pa_nmi = process_solution(solution,name, seed, U_idx,V_idx,X,s,y)
