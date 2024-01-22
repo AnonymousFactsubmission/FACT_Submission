@@ -40,7 +40,28 @@ from scipy import sparse
 from torch import nn
 
 os.environ['CUBLAS_WORKSPACE_CONFIG'] = ':16:8' #:4096:8
+class a_balance:
+  instances = []
+  name = ''
+  seed =0
+  U_idx = None
+  V_idx = None
+  X = None
+  s = None
+  y = None
 
+  def __init__(self):
+    a_balance.instances.append(self)
+
+  def update(self,name, seed, U_idx, V_idx,X,s,y):
+     a_balance.name = name
+     a_balance.seed = seed
+     a_balance.U_idx = U_idx
+     a_balance.V_idx = V_idx
+     a_balance.X = X
+     a_balance.s = s
+     a_balance.y = y
+  
 def get_dataset(name):
     if name == 'Office-31':
         dataset = Office31(exclude_domain='amazon', use_feature=True)
@@ -201,7 +222,15 @@ def trial_run(name, seed, X,s,y, save= False):
    print("acc: {}".format(acc(y, lbls)))
    return
 
-def attack_balance(solution,name, seed, U_idx, V_idx,X,s,y):
+def attack_balance(solution):
+  values = a_balance()
+  X = values.X
+  s = values.s
+  U_idx = values.U_idx
+  V_idx = values.V_idx
+  name = values.name
+  seed = values.seed
+  y = values.y
   X_copy, s_copy = X.copy(), s.copy()
   flipped_labels = solution.get_x()
   i = 0
@@ -321,6 +350,8 @@ def main(name, seed):
 
             dim_size = len(U_idx)
             dim = Dimension(dim_size, [[0, 1]]*dim_size, [False]*dim_size)
+            values = a_balance()
+            values.update(name, seed, U_idx, V_idx,X,s,y)
             obj = Objective(attack_balance, dim)
             solution = Opt.min(obj, Parameter(budget=5))
 
