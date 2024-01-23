@@ -40,6 +40,7 @@ from scipy import sparse
 from torch import nn
 
 os.environ['CUBLAS_WORKSPACE_CONFIG'] = ':16:8' #:4096:8
+
 class a_balance:
   instances = []
   name = ''
@@ -318,36 +319,35 @@ def main(name, seed):
         6 : {'BALANCE': [], 'ENTROPY': [], 'ACC': [], 'NMI': []},
         7 : {'BALANCE': [], 'ENTROPY': [], 'ACC': [], 'NMI': []},
     }
+    labels = ConsensusFairClustering(name, seed, X, s, y,s, save=False)
+    s_test = []
+    X_test = []
+    labels_test = []
+    y_test = []
+    for idx in V_idx:
+      s_test.append(s[idx])
+      X_test.append(X[idx])
+      labels_test.append(labels[idx])
+      y_test.append(y[idx])
+    s_test = np.array(s_test)
+    X_test = np.array(X_test)
+    labels_test = np.array(labels_test)
+    y_test = np.array(y_test)
+    for percent in range(8):
+      cfc_pre_res[percent]['BALANCE'].append(balance(labels_test, X_test, s_test))
+      cfc_pre_res[percent]['ENTROPY'].append(entropy(labels_test, s_test))
+      cfc_pre_res[percent]['ACC'].append(acc(y_test, labels_test))
+      cfc_pre_res[percent]['NMI'].append(nmi(y_test, labels_test))
 
-
+    #U_idx is the list with all the indices of the samples, which might have the group membership switched
     for percent, j in enumerate([int(0.125*len(U_idx_full)), int(0.25*len(U_idx_full)), int(0.375*len(U_idx_full)), int(0.5*len(U_idx_full)), int(0.625*len(U_idx_full)), int(0.75*len(U_idx_full)), int(0.875*len(U_idx_full)), int(len(U_idx_full))]):
         print('percent', percent)
-        U_idx = U_idx_full[:j]
-        V_idx = V_idx_full
+        U_idx = U_idx_full[:j] #take the portion of U_idx
+        V_idx = V_idx_full #indices of the full dataset (some of them are missing)
 
         for trial_idx in range(n_trials):
-
-            labels = ConsensusFairClustering(name, seed, X, s, y,s, save=False)
-
-            s_test = []
-            X_test = []
-            labels_test = []
-            y_test = []
-            for idx in V_idx:
-                s_test.append(s[idx])
-                X_test.append(X[idx])
-                labels_test.append(labels[idx])
-                y_test.append(y[idx])
-            s_test = np.array(s_test)
-            X_test = np.array(X_test)
-            labels_test = np.array(labels_test)
-            y_test = np.array(y_test)
-
-            cfc_pre_res[percent]['BALANCE'].append(balance(labels_test, X_test, s_test))
-            cfc_pre_res[percent]['ENTROPY'].append(entropy(labels_test, s_test))
-            cfc_pre_res[percent]['ACC'].append(acc(y_test, labels_test))
-            cfc_pre_res[percent]['NMI'].append(nmi(y_test, labels_test))
-
+            #compute the clusters using CFC 
+            
             dim_size = len(U_idx)
             dim = Dimension(dim_size, [[0, 1]]*dim_size, [False]*dim_size)
             values = a_balance()
