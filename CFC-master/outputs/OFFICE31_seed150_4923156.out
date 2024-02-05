@@ -1,63 +1,0 @@
-============================================================================================== 
-Warning! Mixing Conda and module environments may lead to corruption of the
-user environment. 
-We do not recommend users mixing those two environments unless absolutely
-necessary. Note that 
-SURF does not provide any support for Conda environment.
-For more information, please refer to our software policy page:
-https://servicedesk.surf.nl/wiki/display/WIKI/Software+policy+Snellius+and+Lisa#SoftwarepolicySnelliusandLisa-UseofAnacondaandMinicondaenvironmentsonSnellius 
-
-Remember that many packages have already been installed on the system and can
-be loaded using 
-the 'module load <package__name>' command. If you are uncertain if a package is
-already available 
-on the system, please use 'module avail' or 'module spider' to search for it.
-============================================================================================== 
-Downloading...
-From: https://drive.google.com/u/0/uc?id=0B4IapRTv9pJ1WTVSd2FIcW4wRTA&export=download
-To: /gpfs/home4/scur1041/FACT2023/CFC-master/fair_clustering/raw_data/office31/domain_adaptation_features_20110616.tar.gz
-Download domain_adaptation_features_20110616.tar.gz from https://drive.google.com/u/0/uc?id=0B4IapRTv9pJ1WTVSd2FIcW4wRTA&export=download
-  0%|          | 0.00/1.44M [00:00<?, ?B/s]100%|██████████| 1.44M/1.44M [00:00<00:00, 135MB/s]
-Downloading...
-From: https://wjdcloud.blob.core.windows.net/dataset/office31_resnet50.zip
-To: /gpfs/home4/scur1041/FACT2023/CFC-master/fair_clustering/raw_data/office31/office31_resnet50.zip
-Download office31_resnet50.zip from https://wjdcloud.blob.core.windows.net/dataset/office31_resnet50.zip
-  0%|          | 0.00/227M [00:00<?, ?B/s]  0%|          | 524k/227M [00:00<02:41, 1.41MB/s]  0%|          | 1.05M/227M [00:00<02:40, 1.41MB/s]  1%|          | 1.57M/227M [00:01<02:40, 1.41MB/s]  1%|          | 2.10M/227M [00:01<02:08, 1.75MB/s]  1%|          | 2.62M/227M [00:01<01:50, 2.03MB/s]  1%|▏         | 3.15M/227M [00:01<01:39, 2.25MB/s]  2%|▏         | 4.19M/227M [00:01<01:09, 3.19MB/s]  2%|▏         | 4.72M/227M [00:02<01:14, 2.97MB/s]  3%|▎         | 5.77M/227M [00:02<00:59, 3.73MB/s]  3%|▎         | 6.82M/227M [00:02<00:51, 4.28MB/s]  4%|▎         | 8.39M/227M [00:02<00:39, 5.49MB/s]  4%|▍         | 9.44M/227M [00:02<00:40, 5.33MB/s]  5%|▍         | 10.5M/227M [00:03<00:39, 5.43MB/s]  6%|▌         | 13.1M/227M [00:03<00:28, 7.65MB/s]  7%|▋         | 15.2M/227M [00:03<00:24, 8.70MB/s]  8%|▊         | 17.3M/227M [00:03<00:23, 9.09MB/s]  9%|▉         | 19.9M/227M [00:03<00:19, 10.5MB/s]  9%|▉         | 21.5M/227M [00:04<00:21, 9.53MB/s] 11%|█         | 24.6M/227M [00:04<00:17, 11.6MB/s] 12%|█▏        | 26.2M/227M [00:04<00:19, 10.3MB/s] 13%|█▎        | 29.4M/227M [00:04<00:16, 12.2MB/s] 14%|█▎        | 30.9M/227M [00:04<00:18, 10.7MB/s] 15%|█▍        | 33.6M/227M [00:05<00:16, 11.7MB/s] 15%|█▌        | 35.1M/227M [00:05<00:18, 10.3MB/s] 17%|█▋        | 38.3M/227M [00:05<00:16, 11.8MB/s] 19%|█▊        | 42.5M/227M [00:05<00:12, 14.3MB/s] 21%|██        | 46.7M/227M [00:05<00:11, 16.0MB/s] 22%|██▏       | 50.9M/227M [00:06<00:10, 17.2MB/s] 24%|██▍       | 55.1M/227M [00:06<00:09, 18.0MB/s] 26%|██▌       | 59.2M/227M [00:06<00:09, 18.6MB/s] 28%|██▊       | 63.4M/227M [00:06<00:08, 18.9MB/s] 30%|██▉       | 67.6M/227M [00:06<00:08, 19.2MB/s] 32%|███▏      | 71.8M/227M [00:07<00:08, 19.4MB/s] 33%|███▎      | 76.0M/227M [00:07<00:07, 19.6MB/s] 35%|███▌      | 80.2M/227M [00:07<00:07, 19.7MB/s] 37%|███▋      | 84.4M/227M [00:07<00:07, 19.7MB/s] 39%|███▉      | 88.6M/227M [00:07<00:07, 19.8MB/s] 41%|████      | 92.8M/227M [00:08<00:06, 19.8MB/s] 43%|████▎     | 97.0M/227M [00:08<00:06, 19.8MB/s] 44%|████▍     | 101M/227M [00:08<00:06, 19.9MB/s]  46%|████▋     | 105M/227M [00:08<00:06, 19.9MB/s] 48%|████▊     | 110M/227M [00:09<00:05, 19.9MB/s] 50%|█████     | 114M/227M [00:09<00:05, 19.9MB/s] 52%|█████▏    | 118M/227M [00:09<00:05, 19.9MB/s] 54%|█████▎    | 122M/227M [00:09<00:05, 19.9MB/s] 56%|█████▌    | 126M/227M [00:09<00:05, 19.9MB/s] 57%|█████▋    | 131M/227M [00:10<00:04, 19.9MB/s] 59%|█████▉    | 135M/227M [00:10<00:04, 19.9MB/s] 61%|██████    | 139M/227M [00:10<00:04, 19.9MB/s] 63%|██████▎   | 143M/227M [00:10<00:04, 19.9MB/s] 65%|██████▍   | 147M/227M [00:10<00:04, 19.9MB/s] 67%|██████▋   | 152M/227M [00:11<00:03, 19.9MB/s] 68%|██████▊   | 156M/227M [00:11<00:03, 19.9MB/s] 70%|███████   | 160M/227M [00:11<00:03, 19.9MB/s] 72%|███████▏  | 164M/227M [00:11<00:03, 19.9MB/s] 74%|███████▍  | 168M/227M [00:11<00:02, 19.8MB/s] 76%|███████▌  | 172M/227M [00:12<00:02, 19.8MB/s] 78%|███████▊  | 177M/227M [00:12<00:02, 19.9MB/s] 80%|███████▉  | 181M/227M [00:12<00:02, 19.9MB/s] 81%|████████▏ | 185M/227M [00:12<00:02, 19.9MB/s] 83%|████████▎ | 189M/227M [00:13<00:01, 19.8MB/s] 85%|████████▌ | 193M/227M [00:13<00:01, 19.9MB/s] 87%|████████▋ | 198M/227M [00:13<00:01, 19.9MB/s] 89%|████████▉ | 202M/227M [00:13<00:01, 19.9MB/s] 91%|█████████ | 206M/227M [00:13<00:01, 19.9MB/s] 92%|█████████▏| 210M/227M [00:14<00:00, 19.9MB/s] 94%|█████████▍| 214M/227M [00:14<00:00, 19.9MB/s] 96%|█████████▌| 219M/227M [00:14<00:00, 19.9MB/s] 98%|█████████▊| 223M/227M [00:14<00:00, 20.3MB/s]100%|█████████▉| 227M/227M [00:14<00:00, 20.8MB/s]100%|██████████| 227M/227M [00:14<00:00, 15.3MB/s]
-Traceback (most recent call last):
-  File "/gpfs/home4/scur1041/FACT2023/CFC-master/Defense_snellius.py", line 352, in <module>
-    main(**kwargs)
-  File "/gpfs/home4/scur1041/FACT2023/CFC-master/Defense_snellius.py", line 263, in main
-    X, y, s= get_dataset(name)
-             ^^^^^^^^^^^^^^^^^
-  File "/gpfs/home4/scur1041/FACT2023/CFC-master/Defense_snellius.py", line 46, in get_dataset
-    dataset = Office31(exclude_domain='amazon', use_feature=True)
-              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/gpfs/home4/scur1041/FACT2023/CFC-master/FairClusteringCodebase/fair_clustering/dataset/office31.py", line 90, in __init__
-    super(Office31, self).__init__(
-  File "/gpfs/home4/scur1041/FACT2023/CFC-master/FairClusteringCodebase/fair_clustering/dataset/base.py", line 328, in __init__
-    self.validate()
-  File "/gpfs/home4/scur1041/FACT2023/CFC-master/FairClusteringCodebase/fair_clustering/dataset/base.py", line 75, in validate
-    self.y = self.y.astype(np.int)
-                           ^^^^^^
-  File "/home/scur1041/.conda/envs/fact2023/lib/python3.11/site-packages/numpy/__init__.py", line 305, in __getattr__
-    raise AttributeError(__former_attrs__[attr])
-AttributeError: module 'numpy' has no attribute 'int'.
-`np.int` was a deprecated alias for the builtin `int`. To avoid this error in existing code, use `int` by itself. Doing this will not modify any behavior and is safe. When replacing `np.int`, you may wish to use e.g. `np.int64` or `np.int32` to specify the precision. If you wish to review your current use, check the release note link for additional information.
-The aliases was originally deprecated in NumPy 1.20; for more details and guidance see the original release note at:
-    https://numpy.org/devdocs/release/1.20.0-notes.html#deprecations. Did you mean: 'inf'?
-srun: error: gcn4: task 0: Exited with exit code 1
-srun: Terminating StepId=4923156.0
-
-JOB STATISTICS
-==============
-Job ID: 4923156
-Cluster: snellius
-User/Group: scur1041/scur1041
-State: FAILED (exit code 1)
-Nodes: 1
-Cores per node: 18
-CPU Utilized: 00:00:09
-CPU Efficiency: 0.48% of 00:31:30 core-walltime
-Job Wall-clock time: 00:01:45
-Memory Utilized: 407.68 MB
-Memory Efficiency: 0.66% of 60.00 GB
